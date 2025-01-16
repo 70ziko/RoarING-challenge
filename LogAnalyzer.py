@@ -69,15 +69,32 @@ class LogAnalyzer:
         
         return self
     
+    def check_data(self):
+        """Sprawdzenie danych przed trenowaniem modelu"""
+        try:
+            print("Checking data for NaN values and infinite values...")
+            if np.any(np.isnan(self.features_encoded)):
+                print("NaN values found in features_encoded")
+            if np.any(np.isinf(self.features_encoded)):
+                print("Infinite values found in features_encoded")
+            print("Data check completed.")
+        except Exception as e:
+            print(f"An error occurred in check_data: {e}")
+    
     def train_anomaly_detector(self, contamination=0.1):
         """Trenowanie modelu detekcji anomalii"""
         try:
+            print("Starting training of anomaly detector...")
+            print(f"Features shape: {self.features_encoded.shape}")
+            self.check_data()
             self.model = IsolationForest(contamination=contamination, random_state=42)
             self.model.fit(self.features_encoded)
+            print("Model training completed.")
             
             # Dodanie predykcji do dataframe
             self.df['is_anomaly'] = self.model.predict(self.features_encoded)
             self.df['is_anomaly'] = self.df['is_anomaly'].map({1: 0, -1: 1})  # 1 dla anomalii
+            print("Anomaly detection completed.")
         except Exception as e:
             print(f"An error occurred in train_anomaly_detector: {e}")
         
@@ -126,13 +143,27 @@ class LogAnalyzer:
             print(f"An error occurred in generate_security_report: {e}")
         
         return report
+    
+    def test_isolation_forest(self):
+        """Testowanie IsolationForest na syntetycznym zbiorze danych"""
+        try:
+            print("Testing IsolationForest with synthetic data...")
+            X = np.random.rand(100, 8)
+            model = IsolationForest(contamination=0.1, random_state=42)
+            model.fit(X)
+            print("Synthetic data test completed successfully.")
+        except Exception as e:
+            print(f"An error occurred in test_isolation_forest: {e}")
 
 # Przykład użycia:
-"""
+
 # Inicjalizacja i wczytanie danych
-analyzer = LogAnalyzer('logs.csv')
+analyzer = LogAnalyzer('data/logs.csv')
 analyzer.load_data()
 analyzer.preprocess_data()
+
+# Testowanie IsolationForest na syntetycznym zbiorze danych
+analyzer.test_isolation_forest()
 
 # Trenowanie modelu
 analyzer.train_anomaly_detector(contamination=0.1)
@@ -140,10 +171,9 @@ analyzer.train_anomaly_detector(contamination=0.1)
 # Analiza anomalii
 anomalies = analyzer.analyze_anomalies()
 
-# Generowanie raportu
+# # Generowanie raportu
 report = analyzer.generate_security_report()
 print("\nRaport bezpieczeństwa:")
 for key, value in report.items():
     print(f"\n{key}:")
     print(value)
-"""
