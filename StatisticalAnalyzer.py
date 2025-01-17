@@ -9,7 +9,7 @@ import seaborn as sns
 from datetime import datetime
 import re
 
-class LogAnalyzer:
+class StatisticalAnalyzer:
     def __init__(self, file_path):
         self.file_path = file_path
         self.df = None
@@ -158,7 +158,7 @@ class LogAnalyzer:
 # Przykład użycia:
 
 # Inicjalizacja i wczytanie danych
-analyzer = LogAnalyzer('data/logs.csv')
+analyzer = StatisticalAnalyzer('data/logs.csv')
 analyzer.load_data()
 analyzer.preprocess_data()
 
