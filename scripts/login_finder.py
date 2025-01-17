@@ -19,7 +19,7 @@ async def try_login(session: aiohttp.ClientSession, num: int) -> bool:
     }
     
     try:
-        async with session.post(url, data=data, timeout=5) as response:
+        async with session.post(url, data=data, timeout=50) as response:
             msg = f"Attempted login with {login}: Status {response.status}"
             print(msg)
             logging.info(msg)
