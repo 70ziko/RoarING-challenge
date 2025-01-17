@@ -13,26 +13,26 @@ device = (
     else "cpu"
 )
 
-kwargs = {'num_workers': 0} if device == "cpu" else {}  # Changed num_workers to 0
+kwargs = {'num_workers': 0} if device == "cpu" else {}
 
 # hyper params
 batch_size = 64
 latent_size = 20
 epochs = 10
 
-# Updated transform pipeline
+# Fixed transform pipeline
 transform = transforms.Compose([
-    transforms.PILToTensor(),  # Convert PIL image to tensor
-    transforms.Lambda(lambda x: x.float() / 255.0)  # Normalize to [0,1]
+    transforms.PILToTensor(),
+    transforms.ConvertImageDtype(torch.float32)
 ])
 
 train_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data', train=True, download=True,
-                   transform=transform),
+    # datasets.MNIST('../data', train=True, download=True,
+    #                transform=transform),
     batch_size=batch_size, shuffle=True, **kwargs)
 
 test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data', train=False, transform=transform),
+    # datasets.MNIST('../data', train=False, transform=transform),
     batch_size=batch_size, shuffle=False, **kwargs)
 
 
