@@ -4,24 +4,35 @@ from torch import nn, optim
 from torch.nn import functional as F
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
+import numpy as np
 
-# cuda setup
-device = torch.device("cuda")
-kwargs = {'num_workers': 1, 'pin_memory': True} 
+# Check if MPS is available (Apple Silicon)
+device = (
+    "mps" 
+    if torch.backends.mps.is_available()
+    else "cpu"
+)
+
+kwargs = {'num_workers': 0} if device == "cpu" else {}  # Changed num_workers to 0
 
 # hyper params
 batch_size = 64
 latent_size = 20
 epochs = 10
 
+# Updated transform pipeline
+transform = transforms.Compose([
+    transforms.PILToTensor(),  # Convert PIL image to tensor
+    transforms.Lambda(lambda x: x.float() / 255.0)  # Normalize to [0,1]
+])
 
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST('../data', train=True, download=True,
-                   transform=transforms.ToTensor()),
+                   transform=transform),
     batch_size=batch_size, shuffle=True, **kwargs)
 
 test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
+    datasets.MNIST('../data', train=False, transform=transform),
     batch_size=batch_size, shuffle=False, **kwargs)
 
 
@@ -142,7 +153,7 @@ for epoch in range(1, epochs + 1):
         train(epoch)
         test(epoch)
         with torch.no_grad():
-            c = torch.eye(10, 10).cuda()
+            c = torch.eye(10, 10).to(device)
             sample = torch.randn(10, latent_size).to(device)
             sample = model.decode(sample, c).cpu()
             save_image(sample.view(10, 1, 28, 28),
