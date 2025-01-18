@@ -19,20 +19,32 @@ class LogPreprocessor:
         self.sequence_length = 10
         self.feature_dim = None
         
+        # Define column names for raw logs
+        self.columns = [
+            'date', 'time', 'ip', 'method', 'path', 'protocol', 
+            'status', 'referrer', 'user_agent', 'payload'
+        ]
+        
     def extract_time_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Extract temporal features from timestamp."""
+        """Extract temporal features from date and time columns."""
         df = df.copy()
-        df['hour'] = pd.to_datetime(df['timestamp']).dt.hour
-        df['minute'] = pd.to_datetime(df['timestamp']).dt.minute
-        df['second'] = pd.to_datetime(df['timestamp']).dt.second
-        df['day_of_week'] = pd.to_datetime(df['timestamp']).dt.dayofweek
+        
+        # Combine date and time into timestamp
+        df['timestamp'] = pd.to_datetime(df['date'] + ' ' + df['time'], format='%d/%b/%Y %H:%M:%S')
+        
+        # Extract temporal features
+        df['hour'] = df['timestamp'].dt.hour
+        df['minute'] = df['timestamp'].dt.minute
+        df['second'] = df['timestamp'].dt.second
+        df['day_of_week'] = df['timestamp'].dt.dayofweek
+        
         return df
 
     def extract_payload_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Extract features from payload data."""
         df = df.copy()
-        df['payload_length'] = df['payload'].fillna('').str.len()
-        df['has_payload'] = df['payload'].notna().astype(int)
+        df['payload_length'] = df['payload'].fillna('').astype(str).str.len()
+        df['has_payload'] = (df['payload'].fillna('') != '').astype(int)
         return df
     
     def encode_categorical(self, df: pd.DataFrame, columns: List[str], fit: bool = True) -> pd.DataFrame:
@@ -43,11 +55,20 @@ class LogPreprocessor:
                 self.label_encoders[col] = LabelEncoder()
                 df[col] = self.label_encoders[col].fit_transform(df[col].fillna('MISSING'))
             else:
-                df[col] = self.label_encoders[col].transform(df[col].fillna('MISSING'))
+                # Handle unseen categories
+                df[col] = df[col].fillna('MISSING')
+                unseen = ~df[col].isin(self.label_encoders[col].classes_)
+                if unseen.any():
+                    df.loc[unseen, col] = 'MISSING'
+                df[col] = self.label_encoders[col].transform(df[col])
         return df
 
     def preprocess(self, df: pd.DataFrame, fit: bool = True) -> np.ndarray:
         """Full preprocessing pipeline."""
+        # If DataFrame has no column names, set them
+        if all(df.columns == range(len(df.columns))):
+            df.columns = self.columns
+            
         # Extract features
         df = self.extract_time_features(df)
         df = self.extract_payload_features(df)
@@ -56,6 +77,9 @@ class LogPreprocessor:
         categorical_cols = ['method', 'path', 'status', 'ip']
         numerical_cols = ['hour', 'minute', 'second', 'day_of_week', 
                          'payload_length', 'has_payload']
+        
+        # Convert status to string for categorical encoding
+        df['status'] = df['status'].astype(str)
         
         # Encode categorical variables
         df = self.encode_categorical(df, categorical_cols, fit)
@@ -79,7 +103,8 @@ class LogPreprocessor:
                 'label_encoders': self.label_encoders,
                 'scaler': self.scaler,
                 'feature_dim': self.feature_dim,
-                'sequence_length': self.sequence_length
+                'sequence_length': self.sequence_length,
+                'columns': self.columns
             }, f)
     
     @classmethod
@@ -93,6 +118,7 @@ class LogPreprocessor:
         preprocessor.scaler = state['scaler']
         preprocessor.feature_dim = state['feature_dim']
         preprocessor.sequence_length = state['sequence_length']
+        preprocessor.columns = state['columns']
         return preprocessor
 
 class LogDataset(Dataset):
@@ -214,7 +240,7 @@ def main():
     print(f"Using device: {device}")
     
     # Load and preprocess data
-    df = pd.read_csv('../data/logs.csv')
+    df = pd.read_csv('../data/logs.csv', header=None)
     preprocessor = LogPreprocessor()
     features = preprocessor.preprocess(df, fit=True)
     
