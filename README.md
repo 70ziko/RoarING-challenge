@@ -87,4 +87,8 @@ W skrypcie należy zmienić ścieżkę do danych testowych, jeśli nie korzysta
 python inference.py
 ```
 
+# Wyniki i analiza
+Skrypt `inference.py` zapisuje wyniki w obecnym folderze pracującym o nazwie `anomaly_detection_results.csv` oraz wyświetla podsumowanie w stdout.
 
+## Analiza wyników
+Bardziej szczegółowa analiza wyników znajduje się w notesie eksplorującym dane `explore_logs.ipynb` na dole (od 18 komórki kodu).
