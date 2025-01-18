@@ -5,9 +5,8 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
-import pickle
-from datetime import datetime
 from typing import Tuple, Dict, List
+import pickle
 import json
 
 class LogPreprocessor:
@@ -69,7 +68,6 @@ class LogPreprocessor:
         if all(df.columns == range(len(df.columns))):
             df.columns = self.columns
             
-        # Extract features
         df = self.extract_time_features(df)
         df = self.extract_payload_features(df)
         
@@ -78,16 +76,11 @@ class LogPreprocessor:
         numerical_cols = ['hour', 'minute', 'second', 'day_of_week', 
                          'payload_length', 'has_payload']
         
-        # Convert status to string for categorical encoding
         df['status'] = df['status'].astype(str)
-        
-        # Encode categorical variables
         df = self.encode_categorical(df, categorical_cols, fit)
         
-        # Combine features
         features = df[categorical_cols + numerical_cols].values
         
-        # Scale numerical features
         if fit:
             self.feature_dim = features.shape[1]
             features = self.scaler.fit_transform(features)
@@ -240,12 +233,12 @@ def main():
     print(f"Using device: {device}")
     
     # Load and preprocess data
-    df = pd.read_csv('../data/logs.csv', header=None)
+    df = pd.read_csv('../data/splits/train_logs.csv', header=None)
     preprocessor = LogPreprocessor()
     features = preprocessor.preprocess(df, fit=True)
     
     # Save preprocessor
-    preprocessor.save('preprocessor.pkl')
+    preprocessor.save('weights/preprocessor.pkl')
     
     # Create datasets
     X_train, X_val = train_test_split(features, test_size=0.12, shuffle=False)

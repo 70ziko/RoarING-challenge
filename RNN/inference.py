@@ -1,11 +1,9 @@
 import torch
 import pandas as pd
 import numpy as np
-from typing import List, Dict
-import pickle
+from typing import Dict
 from torch.utils.data import DataLoader
 
-# Import model and preprocessor classes from training script
 from train import LogAnomalyDetector, LogPreprocessor, LogDataset
 
 class AnomalyDetectorInference:
@@ -18,16 +16,13 @@ class AnomalyDetectorInference:
         device: str = None,
         threshold_percentile: float = 95
     ):
-        # Set device
         if device is None:
             self.device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
         else:
             self.device = torch.device(device)
             
-        # Load preprocessor
         self.preprocessor = LogPreprocessor.load(preprocessor_path)
         
-        # Initialize and load model
         self.model = LogAnomalyDetector(
             input_dim=self.preprocessor.feature_dim,
             hidden_dim=64,
@@ -65,10 +60,8 @@ class AnomalyDetectorInference:
     
     def predict(self, df: pd.DataFrame) -> Dict[str, np.ndarray]:
         """Predict anomalies in input data."""
-        # Preprocess input data
         features = self.preprocessor.preprocess(df, fit=False)
         
-        # Calculate anomaly scores
         anomaly_scores = self.calculate_anomaly_scores(features)
         
         # If threshold not set, set it based on current data
@@ -91,8 +84,8 @@ class AnomalyDetectorInference:
 
 def main():
     # Example usage
-    model_path = 'best_model.pth'
-    preprocessor_path = 'preprocessor.pkl'
+    model_path = 'weights/best_model.pth'
+    preprocessor_path = 'weights/preprocessor.pkl'
     
     # Initialize detector
     detector = AnomalyDetectorInference(
@@ -102,7 +95,7 @@ def main():
     )
     
     # Load and process new data
-    new_logs = pd.read_csv('new_logs.csv')
+    new_logs = pd.read_csv('../data/splits/test_logs.csv')
     results = detector.predict(new_logs)
     
     # Print summary
