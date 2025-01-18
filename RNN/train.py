@@ -225,7 +225,7 @@ def train_model(
             best_val_loss = val_loss
             patience_counter = 0
             # Save best model
-            torch.save(model.state_dict(), 'best_model.pth')
+            torch.save(model.state_dict(), 'weights/best_model.pth')
         else:
             patience_counter += 1
             if patience_counter >= patience:
