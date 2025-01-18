@@ -4,6 +4,23 @@
 
 Projekt implementuje system detekcji anomalii w logach HTTP wykorzystując architekturę sieci rekurencyjnej (RNN). Głównym celem jest wykrywanie nietypowych wzorców w ruchu sieciowym, które mogą wskazywać na potencjalne zagrożenia bezpieczeństwa.
 
+
+### Struktura Projektu
+```
+.
+├── data/
+│   ├── logs.csv                    # Surowe logi
+│   └── splits/                     # Podzielone dane
+├── RNN/
+│   ├── train.py                    # Skrypt trenujący
+│   ├── inference.py                # Skrypt inferencji
+│   └── weights/                    # Zapisane modele
+└── scripts/
+    ├── split_data.py              # Podział danych
+    └── analyze_results.py         # Analiza wyników
+```
+
+
 ## Eksploracja Danych
 
 Notebook `explore_logs.ipynb` zawiera szczegółową analizę danych wejściowych, w tym:
@@ -12,7 +29,7 @@ Notebook `explore_logs.ipynb` zawiera szczegółową analizę danych wejściowyc
 - Wzorce czasowe ruchu
 - Statystyki kodów odpowiedzi
 - Wizualizacje kluczowych metryk
-- Uzasadnienie oraz przeprowadzenie podziału zbioru danych
+- Uzasadnienie oraz przeprowadzenie podziału danych
 
 ## Architektura Modelu
 
@@ -47,21 +64,6 @@ conda install pytorch torchvision torchaudio -c pytorch
 
 # Instalacja pozostałych zależności
 pip install -r requirements.txt
-```
-
-### Struktura Projektu
-```
-.
-├── data/
-│   ├── logs.csv                    # Surowe logi
-│   └── splits/                     # Podzielone dane
-├── RNN/
-│   ├── train.py                    # Skrypt trenujący
-│   ├── inference.py                # Skrypt inferencji
-│   └── weights/                    # Zapisane modele
-└── scripts/
-    ├── split_data.py              # Podział danych
-    └── analyze_results.py         # Analiza wyników
 ```
 
 ### Trenowanie Modelu
