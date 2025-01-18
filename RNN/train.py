@@ -248,7 +248,7 @@ def main():
     preprocessor.save('preprocessor.pkl')
     
     # Create datasets
-    X_train, X_val = train_test_split(features, test_size=0.2, shuffle=False)
+    X_train, X_val = train_test_split(features, test_size=0.12, shuffle=False)
     
     train_dataset = LogDataset(X_train, preprocessor.sequence_length)
     val_dataset = LogDataset(X_val, preprocessor.sequence_length)
