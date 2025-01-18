@@ -47,19 +47,29 @@ class LogPreprocessor:
         return df
     
     def encode_categorical(self, df: pd.DataFrame, columns: List[str], fit: bool = True) -> pd.DataFrame:
-        """Encode categorical variables using LabelEncoder."""
+        """
+        Encode categorical variables using LabelEncoder.
+        Handles unseen categories during inference by mapping them to a special token.
+        """
         df = df.copy()
         for col in columns:
+            df[col] = df[col].fillna('MISSING')
+            
             if fit:
+                # During training, fit the encoder and include 'MISSING' and 'UNKNOWN' tokens
+                unique_values = set(df[col].unique())
+                unique_values.add('MISSING')  # Add MISSING token
+                unique_values.add('UNKNOWN')  # Add UNKNOWN token for unseen categories
+                
                 self.label_encoders[col] = LabelEncoder()
-                df[col] = self.label_encoders[col].fit_transform(df[col].fillna('MISSING'))
-            else:
-                # Handle unseen categories
-                df[col] = df[col].fillna('MISSING')
-                unseen = ~df[col].isin(self.label_encoders[col].classes_)
-                if unseen.any():
-                    df.loc[unseen, col] = 'MISSING'
+                self.label_encoders[col].fit(list(unique_values))
                 df[col] = self.label_encoders[col].transform(df[col])
+            else:
+                # During inference, map unseen categories to 'UNKNOWN'
+                known_categories = set(self.label_encoders[col].classes_)
+                df[col] = df[col].map(lambda x: x if x in known_categories else 'UNKNOWN')
+                df[col] = self.label_encoders[col].transform(df[col])
+        
         return df
 
     def preprocess(self, df: pd.DataFrame, fit: bool = True) -> np.ndarray:

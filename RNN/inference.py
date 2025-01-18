@@ -83,23 +83,27 @@ class AnomalyDetectorInference:
         }
 
 def main():
-    # Example usage
     model_path = 'weights/best_model.pth'
     preprocessor_path = 'weights/preprocessor.pkl'
+    test_logs_path = '../data/splits/test_logs.csv'
     
-    # Initialize detector
+    column_names = ['date', 'time', 'ip', 'method', 'path', 'protocol', 
+                   'status', 'referrer', 'user_agent', 'payload']
+    new_logs = pd.read_csv(test_logs_path, header=None, names=column_names)
+    
     detector = AnomalyDetectorInference(
         model_path=model_path,
         preprocessor_path=preprocessor_path,
         threshold_percentile=95
     )
     
-    # Load and process new data
-    new_logs = pd.read_csv('../data/splits/test_logs.csv')
     results = detector.predict(new_logs)
+    
     
     # Print summary
     total_anomalies = results['anomalies'].sum()
+    print(f"\nSummary:")
+    print("-" * 50)
     print(f"Detected {total_anomalies} anomalies in {len(new_logs)} logs")
     print(f"Anomaly threshold: {results['threshold']:.4f}")
     
